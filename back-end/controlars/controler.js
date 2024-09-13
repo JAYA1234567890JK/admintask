@@ -101,21 +101,53 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// const login = async (req, res) => {
+//   const { name, email } = req.body;
+
+//   const user = await Users.findOne({ email: email });
+//   if (user.name === name) {
+//     const jwtToken = jwt.sign({ id: user.id, role: user.role }, "token", {
+//       expiresIn: "1day",
+//     });
+//     return res
+//       .status(200)
+//       .json({ token: jwtToken, user, message: "user Login sucess" });
+//   } else {
+//     res.status(400).json({ message: "user credentail not matching" });
+//   }
+// };
+
 const login = async (req, res) => {
   const { name, email } = req.body;
 
-  const user = await Users.findOne({ email: email });
-  if (user.name === name) {
-    const jwtToken = jwt.sign({ id: user.id, role: user.role }, "token", {
-      expiresIn: "1day",
-    });
-    return res
-      .status(200)
-      .json({ token: jwtToken, user, message: "user Login sucess" });
-  } else {
-    res.status(400).json({ message: "user credentail not matching" });
+  // Validate request body
+  if (!name || !email) {
+    return res.status(400).json({ message: "Name and email are required" });
+  }
+
+  try {
+    const user = await Users.findOne({ email: email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.name === name) {
+      const jwtToken = jwt.sign({ id: user.id, role: user.role }, "token", {
+        expiresIn: "1day",
+      });
+      return res
+        .status(200)
+        .json({ token: jwtToken, user, message: "User login successful" });
+    } else {
+      return res.status(400).json({ message: "User credentials not matching" });
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 module.exports = {
   createAdmin,
